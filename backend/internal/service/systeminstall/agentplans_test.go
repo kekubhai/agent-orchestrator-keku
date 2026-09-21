@@ -155,7 +155,7 @@ func TestOfficialInstallerPlansAreAutomaticAndServerOwned(t *testing.T) {
 		{"windows", TargetCursor, []string{"pwsh.exe"}, "https://cursor.com/install?win32=true", "pwsh.exe"},
 		{"linux", TargetAider, []string{"sh"}, "https://aider.chat/install.sh", "sh"},
 		{"linux", TargetGrok, []string{"bash"}, "https://x.ai/cli/install.sh", "bash"},
-		{"linux", TargetKimi, []string{"bash"}, "https://code.kimi.com/kimi-code/install.sh", "bash"},
+		{"linux", TargetKimi, []string{"bash"}, "https://code.kimi.ai/kimi-code/install.sh", "bash"},
 		{"darwin", TargetGoose, []string{"bash"}, "https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh", "bash"},
 		{"linux", TargetGoose, []string{"bash"}, "https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh", "bash"},
 		{"windows", TargetGoose, []string{"pwsh.exe"}, "https://raw.githubusercontent.com/aaif-goose/goose/main/download_cli.ps1", "pwsh.exe"},

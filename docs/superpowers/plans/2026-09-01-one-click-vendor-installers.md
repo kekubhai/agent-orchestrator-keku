@@ -196,7 +196,7 @@ tests := []struct {
 	{"windows", TargetCursor, []string{"pwsh.exe"}, "https://cursor.com/install?win32=true", "pwsh.exe"},
 	{"linux", TargetAider, []string{"sh"}, "https://aider.chat/install.sh", "sh"},
 	{"linux", TargetGrok, []string{"bash"}, "https://x.ai/cli/install.sh", "bash"},
-	{"linux", TargetKimi, []string{"bash"}, "https://code.kimi.com/kimi-code/install.sh", "bash"},
+	{"linux", TargetKimi, []string{"bash"}, "https://code.kimi.ai/kimi-code/install.sh", "bash"},
 	{"linux", TargetGoose, []string{"bash"}, "https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh", "bash"},
 	{"linux", TargetDevin, []string{"bash"}, "https://cli.devin.ai/install.sh", "bash"},
 	{"windows", TargetKiro, []string{"powershell.exe"}, "https://cli.kiro.dev/install.ps1", "powershell.exe"},
@@ -295,7 +295,7 @@ Use this complete URL registry; do not discover URLs dynamically:
 | OpenCode | `https://opencode.ai/install` / `bash` | none; keep winget |
 | Aider | `https://aider.chat/install.sh` / `sh` | `https://aider.chat/install.ps1` |
 | Grok | `https://x.ai/cli/install.sh` / `bash` | `https://x.ai/cli/install.ps1` |
-| Kimi | `https://code.kimi.com/kimi-code/install.sh` / `bash` | `https://code.kimi.com/kimi-code/install.ps1` |
+| Kimi | `https://code.kimi.ai/kimi-code/install.sh` / `bash` | `https://code.kimi.ai/kimi-code/install.ps1` |
 | Pi | `https://pi.dev/install.sh` / `sh` | none; keep npm |
 | Amp | `https://ampcode.com/install.sh` / `bash` | `https://ampcode.com/install.ps1` |
 | Droid | `https://app.factory.ai/cli` / `sh` | `https://app.factory.ai/cli/windows` |

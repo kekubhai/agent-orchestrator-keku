@@ -81,7 +81,7 @@ func (s requestPlanner) agentMethodPlans(target Target, operation AgentOperation
 	case TargetGrok:
 		plans = []Plan{s.officialByOS(target, "https://x.ai/cli/install.sh", "bash", "https://x.ai/cli/install.ps1", agentDocumentationURLs[target])}
 	case TargetKimi:
-		plans = []Plan{s.officialByOS(target, "https://code.kimi.com/kimi-code/install.sh", "bash", "https://code.kimi.com/kimi-code/install.ps1", agentDocumentationURLs[target])}
+		plans = []Plan{s.officialByOS(target, "https://code.kimi.ai/kimi-code/install.sh", "bash", "https://code.kimi.ai/kimi-code/install.ps1", agentDocumentationURLs[target])}
 	case TargetPi:
 		plans = []Plan{s.planNPM(target, "@earendil-works/pi-coding-agent")}
 		if s.goos == "darwin" || s.goos == "linux" {
