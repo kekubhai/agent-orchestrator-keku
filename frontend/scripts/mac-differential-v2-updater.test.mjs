@@ -1,11 +1,11 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { EventEmitter } from "node:events";
 import { createServer, request } from "node:http";
 import { createRequire } from "node:module";
 import { sign } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { closeSync, copyFileSync, fstatSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, copyFileSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import * as fsPromises from "node:fs/promises";
 import { join } from "node:path";
 import { macV2Fixture } from "./test-fixtures/mac-differential-v2.mjs";
@@ -25,7 +25,21 @@ const { ElectronHttpExecutor } = require("electron-updater/out/electronHttpExecu
 const { HttpExecutor, CancellationToken } = require("builder-util-runtime");
 const semver = require("semver");
 const dirs = [];
-afterEach(() => { vi.restoreAllMocks(); vi.mocked(fsPromises.open).mockReset(); vi.mocked(fsPromises.rm).mockReset(); for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+const removeDirs = () => { for (const dir of dirs) { try { rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }); } catch { /* swept again below */ } } };
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.mocked(fsPromises.open).mockReset();
+  vi.mocked(fsPromises.rm).mockReset();
+  removeDirs();
+});
+// A path that resists its per-test removal (transient lock under parallel
+// load) is retried here once nothing else is writing.
+afterAll(async () => {
+  for (let attempt = 0; attempt < 20 && dirs.some(existsSync); attempt++) {
+    removeDirs();
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+});
 
 // The real dependency full download/digest implementation. Only Electron's
 // network transport and native handoff are substituted with a loopback harness.

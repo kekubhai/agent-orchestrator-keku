@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { chmod, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { findRemote, removeSavedRemote, toHostViews, updateSavedRemote } from "./remotes-ipc";
@@ -8,8 +8,14 @@ import type { RemoteEntry } from "./remotes-store";
 const TWO_HOSTS =
 	'{"remotes":[{"label":"workbox","url":"http://192.0.2.1:1","password":"old"},{"label":"mini","url":"http://192.0.2.9:9","password":"m"}]}';
 
+const tempDirs: string[] = [];
+afterEach(async () => {
+	for (const dir of tempDirs.splice(0)) await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+});
+
 async function tempFile(contents = TWO_HOSTS, mode = 0o600): Promise<string> {
 	const dir = await mkdtemp(join(tmpdir(), "ao-remotes-ipc-"));
+	tempDirs.push(dir);
 	const path = join(dir, "remotes.json");
 	await writeFile(path, contents, "utf8");
 	await chmod(path, mode);

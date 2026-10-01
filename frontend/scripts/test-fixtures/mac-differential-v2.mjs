@@ -1,14 +1,23 @@
 import { createHash, generateKeyPairSync } from "node:crypto";
-import { createRequire } from "node:module";
-import { mkdtempSync, readFileSync, writeFileSync, utimesSync, mkdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync, utimesSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { generateMacV2Assets } from "../mac-differential-v2.mjs";
-const require = createRequire(import.meta.url);
-const { zipSync } = require("cross-zip");
+import { zipFixtureFile } from "./zip.mjs";
 
 export async function macV2Fixture(arches = ["arm64", "x64"]) {
   const dir = mkdtempSync(join(tmpdir(), "ao-v2-fixture-"));
+  // A throw mid-build would otherwise strand the half-built fixture in the
+  // OS temp dir: callers only learn `dir` after this resolves.
+  try {
+    return await buildMacV2Fixture(dir, arches);
+  } catch (error) {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+    throw error;
+  }
+}
+
+async function buildMacV2Fixture(dir, arches) {
   const source = join(dir, "source");
   const old = join(dir, "old");
   mkdirSync(source); mkdirSync(old);
@@ -19,7 +28,7 @@ export async function macV2Fixture(arches = ["arm64", "x64"]) {
     const payload = join(source, "fixture.bin");
     writeFileSync(payload, bytes);
     utimesSync(payload, new Date("2026-01-01T00:00:00Z"), new Date("2026-01-01T00:00:00Z"));
-    zipSync(payload, destination);
+    zipFixtureFile(payload, destination);
   };
   for (const arch of arches) {
     const previous = Buffer.alloc(512_000);

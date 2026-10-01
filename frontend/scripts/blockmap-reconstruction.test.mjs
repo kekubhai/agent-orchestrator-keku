@@ -8,13 +8,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import { writeBlockmap } from "./blockmap.mjs";
+import { zipFixtureFile } from "./test-fixtures/zip.mjs";
 
 const require = createRequire(import.meta.url);
 const { MacUpdater } = require("electron-updater/out/MacUpdater.js");
 const { DownloadedUpdateHelper } = require("electron-updater/out/DownloadedUpdateHelper.js");
 const { ElectronHttpExecutor } = require("electron-updater/out/electronHttpExecutor.js");
 const { HttpExecutor, CancellationToken } = require("builder-util-runtime");
-const { zipSync } = require("cross-zip");
 const temporaryDirectories = [];
 const sha512 = bytes => createHash("sha512").update(bytes).digest("base64");
 
@@ -51,7 +51,7 @@ function zipBytes(payload) {
 	const archive = join(dir, "fixture.zip");
 	writeFileSync(source, payload);
 	utimesSync(source, new Date("2026-01-01T00:00:00Z"), new Date("2026-01-01T00:00:00Z"));
-	zipSync(source, archive);
+	zipFixtureFile(source, archive);
 	return readFileSync(archive);
 }
 

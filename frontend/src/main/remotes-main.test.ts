@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { chmod, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { registerRemotesIpc } from "./remotes-main";
@@ -20,8 +20,14 @@ function fakeIpc() {
 	};
 }
 
+const tempDirs: string[] = [];
+afterEach(async () => {
+	for (const dir of tempDirs.splice(0)) await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+});
+
 async function tempFile(): Promise<string> {
 	const dir = await mkdtemp(join(tmpdir(), "ao-remotes-main-"));
+	tempDirs.push(dir);
 	const path = join(dir, "remotes.json");
 	await writeFile(path, '{"remotes":[{"label":"workbox","url":"http://192.0.2.1:1","password":"old"}]}', "utf8");
 	await chmod(path, 0o600);

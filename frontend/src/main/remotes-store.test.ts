@@ -1,11 +1,17 @@
-import { describe, expect, it } from "vitest";
-import { chmod, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { afterEach, describe, expect, it } from "vitest";
+import { chmod, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { addRemote, readRemotes, removeRemote, RemotesFilePermissionError, updateRemote } from "./remotes-store";
 
+const tempDirs: string[] = [];
+afterEach(async () => {
+	for (const dir of tempDirs.splice(0)) await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+});
+
 async function tempFile(contents?: string, mode = 0o600): Promise<string> {
 	const dir = await mkdtemp(join(tmpdir(), "ao-remotes-"));
+	tempDirs.push(dir);
 	const path = join(dir, "remotes.json");
 	if (contents !== undefined) {
 		await writeFile(path, contents, "utf8");

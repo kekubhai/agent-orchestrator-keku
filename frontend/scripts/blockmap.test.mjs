@@ -1,15 +1,27 @@
 // @vitest-environment node
 // frontend/scripts/blockmap.test.mjs
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import { writeBlockmap } from "./blockmap.mjs";
-import { mkdtempSync, writeFileSync, existsSync, readFileSync, statSync } from "node:fs";
+import { mkdtempSync, writeFileSync, existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 
+const temporaryDirectories = [];
+afterEach(() => {
+	for (const dir of temporaryDirectories.splice(0)) {
+		try {
+			rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+		} catch {
+			// Best effort: a locked path must not fail the suite over residue.
+		}
+	}
+});
+
 describe("writeBlockmap", () => {
 	it("writes a gzip sidecar and returns the file's base64 sha512 + size", async () => {
 		const dir = mkdtempSync(join(tmpdir(), "bm-"));
+		temporaryDirectories.push(dir);
 		const file = join(dir, "artifact.bin");
 		// ~200KB of varied bytes so the chunker produces multiple chunks.
 		const buf = Buffer.alloc(200_000);

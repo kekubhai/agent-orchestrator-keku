@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { EventEmitter } from "node:events";
@@ -85,14 +85,36 @@ function createAutoUpdaterMock(): AutoUpdaterMock {
 // module can still land while its directory is being removed, so the removal
 // retries rather than failing the run on ENOTEMPTY.
 let stateDir = "";
+const stateDirs: string[] = [];
 const hostPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
 beforeEach(() => {
   Object.defineProperty(process, "platform", { value: "linux" });
   stateDir = mkdtempSync(nodePath.join(os.tmpdir(), "ao-updater-state-"));
+  stateDirs.push(stateDir);
 });
 afterEach(() => {
   Object.defineProperty(process, "platform", hostPlatform);
   rmSync(stateDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 25 });
+});
+
+// The per-test removal above can still lose the race: a fire-and-forget
+// provenance write re-creates the directory after its test cleaned it up.
+// Nothing writes once the suite is over, so sweep every directory again and
+// retry while stragglers are still in flight.
+afterAll(async () => {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const remaining = stateDirs.filter((dir) => existsSync(dir));
+    if (remaining.length === 0) return;
+    for (const dir of remaining) {
+      try {
+        rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 25 });
+      } catch {
+        // A locked path is retried on the next pass; if it never unlocks the
+        // sweep is best-effort and leaves the same residue as before.
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
 });
 
 /** Alias kept for readability: a re-import is a simulated relaunch. */

@@ -1,14 +1,23 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { sign } from "node:crypto";
-import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { macV2Fixture } from "./test-fixtures/mac-differential-v2.mjs";
 import { generateMacV2Assets, verifyMacV2Assets } from "./mac-differential-v2.mjs";
 import { generateFeeds } from "./feed.mjs";
 import { MAC_V2_METADATA, macV2Canonical, verifyMacV2Envelope, validateMacV2Payload } from "../src/main/mac-differential-v2-protocol";
 const dirs = [];
-afterEach(() => { for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+const removeDirs = () => { for (const dir of dirs) { try { rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }); } catch { /* swept again below */ } } };
+afterEach(removeDirs);
+// A path that resists its per-test removal (transient lock under parallel
+// load) is retried here once nothing else is writing.
+afterAll(async () => {
+  for (let attempt = 0; attempt < 20 && dirs.some(existsSync); attempt++) {
+    removeDirs();
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+});
 async function fixture() { const f = await macV2Fixture(); dirs.push(f.dir); return f; }
 
 describe("isolated macOS differential v2 release contract", () => {

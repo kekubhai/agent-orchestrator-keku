@@ -8,7 +8,11 @@ const profileId = "11111111-1111-4111-8111-111111111111";
 const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
-	await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
+	await Promise.all(
+		temporaryDirectories
+			.splice(0)
+			.map((directory) => rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 })),
+	);
 });
 
 async function temporaryState(): Promise<string> {
