@@ -2,6 +2,7 @@ import { Check, Keyboard, Pencil, Plus, RotateCcw, Search, X } from "lucide-reac
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { shortcutCategoryLabelKeys, shortcutLabelKeys } from "../../i18n/key-maps";
+import { filterShortcuts } from "../../../shared/shortcut-search";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	APP_SHORTCUTS,
@@ -152,16 +153,17 @@ export function KeyboardShortcutsContent({
 		void aoBridge.keybindings.setRecording(false);
 	};
 
-	const filteredShortcuts = useMemo(() => {
-		const needle = query.trim().toLowerCase();
-		if (!needle) return APP_SHORTCUTS;
-		return APP_SHORTCUTS.filter((shortcut) => {
-			const labels = effectiveShortcutBindings(shortcut.id, isMac, overrides)
-				.map((candidate) => shortcutBindingLabel(candidate, isMac))
-				.join(" ");
-			return `${shortcutLabel(shortcut.id, t)} ${shortcutCategoryLabel(shortcut.category, t)} ${labels}`.toLowerCase().includes(needle);
-		});
-	}, [isMac, overrides, query, t]);
+	const filteredShortcuts = useMemo(
+		() =>
+			filterShortcuts({
+				query,
+				isMac,
+				overrides,
+				label: (shortcut) => shortcutLabel(shortcut.id, t),
+				category: (shortcut) => shortcutCategoryLabel(shortcut.category, t),
+			}),
+		[isMac, overrides, query, t],
+	);
 
 	const applyBinding = async (
 		targetId: AppShortcutId,

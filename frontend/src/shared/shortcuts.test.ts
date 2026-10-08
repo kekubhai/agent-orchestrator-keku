@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { matchesShortcutSearch } from "./shortcut-search";
 import {
 	APP_SHORTCUTS,
 	matchesAppShortcut,
@@ -14,6 +15,7 @@ import {
 	defaultShortcutBindings,
 	matchesShortcutBinding,
 	shortcutBindingValidationError,
+	type KeybindingOverrides,
 	type ShortcutChord,
 } from "./shortcuts";
 
@@ -157,5 +159,56 @@ describe("shortcut binding matching and validation", () => {
 		expect(shortcutBindingValidationError(chord({ key: "q", meta: true }), true)).not.toBeNull();
 		expect(shortcutBindingValidationError(chord({ key: "F4", alt: true }), false)).not.toBeNull();
 		expect(shortcutBindingValidationError(chord({ key: "j", meta: true }), true)).toBeNull();
+	});
+});
+
+
+const shortcutSearchLabels = {
+	label: (shortcut: (typeof APP_SHORTCUTS)[number]) => shortcut.label,
+	category: (shortcut: (typeof APP_SHORTCUTS)[number]) => shortcut.category,
+};
+
+function shortcutMatches(id: (typeof APP_SHORTCUTS)[number]["id"], query: string, isMac = false, overrides: KeybindingOverrides = {}) {
+	const shortcut = APP_SHORTCUTS.find((candidate) => candidate.id === id);
+	if (!shortcut) throw new Error(`missing shortcut ${id}`);
+	return matchesShortcutSearch(shortcut, { query, isMac, overrides, ...shortcutSearchLabels });
+}
+
+describe("shortcut search", () => {
+	it("matches a raw shortcut ID", () => {
+		expect(shortcutMatches("toggle-sidebar", "toggle-sidebar")).toBe(true);
+	});
+
+	it("matches both default and effective bindings after an override", () => {
+		const overrides = { "toggle-sidebar": [chord({ key: "a", ctrl: true })] };
+		expect(shortcutMatches("toggle-sidebar", "ctrl b", false, overrides)).toBe(true);
+		expect(shortcutMatches("toggle-sidebar", "ctrl a", false, overrides)).toBe(true);
+	});
+
+	it("matches keybinding modifier aliases and spaced chord queries", () => {
+		expect(shortcutMatches("toggle-sidebar", "control b")).toBe(true);
+		expect(shortcutMatches("toggle-inspector", "ctrl shift b")).toBe(true);
+		expect(shortcutMatches("toggle-inspector", "ctrl+shift+b")).toBe(true);
+		expect(shortcutMatches("toggle-sidebar", "cmd b", true)).toBe(true);
+		expect(shortcutMatches("toggle-sidebar", "command b", true)).toBe(true);
+		expect(shortcutMatches("toggle-sidebar", "⌘b", true)).toBe(true);
+		expect(shortcutMatches("toggle-browser-devtools", "option i", true)).toBe(true);
+		expect(shortcutMatches("toggle-browser-devtools", "⌥i", true)).toBe(true);
+	});
+
+	it("uses AND semantics for label terms and keywords", () => {
+		expect(shortcutMatches("next-tab", "tab next")).toBe(true);
+		expect(shortcutMatches("command-palette", "command bar")).toBe(true);
+		expect(shortcutMatches("toggle-inspector", "details")).toBe(true);
+	});
+
+	it("matches status tokens", () => {
+		expect(shortcutMatches("next-tab", "modified", false, { "next-tab": [chord({ key: "a", ctrl: true })] })).toBe(true);
+		expect(shortcutMatches("toggle-sidebar", "unassigned", false, { "toggle-sidebar": [] })).toBe(true);
+		expect(shortcutMatches("open-project", "fixed project")).toBe(true);
+	});
+
+	it("returns a match for an empty query", () => {
+		expect(shortcutMatches("next-tab", "   ")).toBe(true);
 	});
 });

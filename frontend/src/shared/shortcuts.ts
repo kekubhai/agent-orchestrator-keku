@@ -51,6 +51,8 @@ export type ShortcutDefinition = {
 	category: ShortcutCategory;
 	/** Indexed project selection is a family of nine bindings, not one command. */
 	customizable?: boolean;
+	/** English search synonyms; localization is intentionally not required. */
+	keywords?: readonly string[];
 };
 
 export const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = ["General", "Navigation", "Session"];
@@ -77,11 +79,13 @@ export const APP_SHORTCUTS: readonly ShortcutDefinition[] = [
 		id: "keyboard-shortcuts",
 		label: "Show keyboard shortcuts",
 		category: "General",
+		keywords: ["shortcuts", "hotkeys", "help"],
 	},
 	{
 		id: "command-palette",
 		label: "Open command palette",
 		category: "General",
+		keywords: ["palette", "command bar"],
 	},
 	{
 		id: "open-settings",
@@ -92,6 +96,7 @@ export const APP_SHORTCUTS: readonly ShortcutDefinition[] = [
 		id: "toggle-sidebar",
 		label: "Toggle sidebar",
 		category: "General",
+		keywords: ["sidebar", "side panel"],
 	},
 	{
 		id: "open-project",
@@ -123,6 +128,7 @@ export const APP_SHORTCUTS: readonly ShortcutDefinition[] = [
 		id: "toggle-inspector",
 		label: "Toggle inspector",
 		category: "Session",
+		keywords: ["inspector", "details"],
 	},
 	{
 		id: "focus-terminal",
